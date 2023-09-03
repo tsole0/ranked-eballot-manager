@@ -1,0 +1,7 @@
+# NEEDED TO KEEP ELECTION RESULTS PRIVATE
+*.csv
+*.db
+
+# OTHER RANDOM STUFF
+*.pyc
+*.DS_Store
