@@ -1,6 +1,7 @@
 import sqlite3
 import csv
 import glob
+from math import ceil
 
 # Create database for data manipulation
 connection = sqlite3.connect("eballot-data.db")
@@ -59,6 +60,57 @@ def ranked_choice():
                 SET \"{column_name}\" = SUBSTR(\"{column_name}\", 1, 1);
                 """
         cur.execute(update_query)
+    
+    round_number = 1 # Starts as round 1 of elections
+    tally_result = tally(1) # Count first choices
+    eval(tally_result, round_number) # Start the election adjudication loop
+
+def tally(place: int):
+    """
+    Count nth place votes for each candidate (column)
+    :param place: The place that will be counted for each candidate.
+    """
+    cur.execute(f"PRAGMA table_info(eballot)")
+    tally_result = []
+    columns = cur.fetchall()
+    for column in columns:
+        column_name = column[1]
+        query = f"""
+        SELECT COUNT(*) FROM eballot WHERE \"{column_name}\" = '{place}';
+        """
+        cur.execute(query)
+        result = cur.fetchone() # Fetch the result
+        tally_result.append((column_name, result[0])) # Store result as a tuple
+    
+    return tally_result
+
+def eval(results: list, round_number: int):
+    """
+    Determine if winner, and who.
+    :param results: The list containing amount of votes to evaluate. Must only include tuples of form (candidate name, number of votes)
+    :param round_number: The number of the current round of voting.
+    """
+    num_to_win = ceil(sum((result[1] for result in results)) / 2) # The number of votes needed to win in this round of voting (simple majority)
+    
+    # Determine if there is a winner
+    for result in results:
+        if result[1] >= num_to_win:
+            winner()
+        else:
+            new_round(round_number)
+        
+def new_round(round_number: int):
+    """
+    'Eliminate' lowest-scoring candidate, then kick back to new evaluation round--
+    Note that we do not actually alter spreadsheet data, but instead keep track of everything in Python
+    :param round_number: The number of the current round of voting.
+    """
+    
+
+
+def winner():
+    pass
+
 
 
 
