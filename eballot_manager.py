@@ -80,14 +80,14 @@ def tally(place: int):
         """
         cur.execute(query)
         result = cur.fetchone() # Fetch the result
-        tally_result.append((column_name, result[0])) # Store result as a tuple
+        tally_result.append([column_name, result[0]]) # Store result as a list in a list
     
     return tally_result
 
 def eval(results: list, round_number: int):
     """
     Determine if winner, and who.
-    :param results: The list containing amount of votes to evaluate. Must only include tuples of form (candidate name, number of votes)
+    :param results: The list containing amount of votes to evaluate. Must only include lists of form [candidate name, number of votes]
     :param round_number: The number of the current round of voting.
     """
     num_to_win = ceil(sum((result[1] for result in results)) / 2) # The number of votes needed to win in this round of voting (simple majority)
@@ -96,16 +96,59 @@ def eval(results: list, round_number: int):
     for result in results:
         if result[1] >= num_to_win:
             winner()
+            break
         else:
             new_round(round_number)
+            break
         
 def new_round(round_number: int):
     """
     'Eliminate' lowest-scoring candidate, then kick back to new evaluation round--
-    Note that we do not actually alter spreadsheet data, but instead keep track of everything in Python
     :param round_number: The number of the current round of voting.
     """
-    
+    tally_results = tally(1)
+    lowest = [str, -1]
+    for result in tally_results:
+        if result[1] < lowest[1] or lowest[1] == -1:
+            lowest = result
+
+    query = f"""
+    SELECT ROWID
+    FROM eballot
+    WHERE "{lowest[0]}" = 1;
+    """
+    cur.execute(query)
+    rowids = [rowid[0] for rowid in cur.fetchall()] # Gets the row IDs of all 1's in the lowest-scoring candidate's column
+
+    for rowid in rowids:
+        row = extract_row(rowid)
+
+
+    round_number += 1
+
+def extract_row(rowid: int):
+    """
+    Extract a row from the SQL database.
+    :param rowid: The ROWID (row ID) of the column you wish to extract
+    """
+    row = []
+    cur.execute(f"PRAGMA table_info(eballot)")
+    columns = cur.fetchall()
+    for column in columns:
+        column_name = column[1]
+        query = f"""
+            SELECT "{column_name}"
+            FROM eballot
+            WHERE ROWID = {rowid};
+        """
+        cur.execute(query)
+        row.append(cur.fetchone()[0])
+    print(row)
+
+
+
+
+
 
 
 def winner():
