@@ -107,7 +107,8 @@ def new_round(round_number: int):
     :param round_number: The number of the current round of voting.
     """
     tally_results = tally(1)
-    lowest = [str, -1]
+    initial_value = -1
+    lowest = [str, initial_value]
     for result in tally_results:
         if result[1] < lowest[1] or lowest[1] == -1:
             lowest = result
