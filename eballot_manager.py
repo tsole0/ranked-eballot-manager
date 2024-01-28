@@ -84,6 +84,7 @@ def tally(place: int):
         result = cur.fetchone() # Fetch the result
         tally_result.append([column_name, result[0]]) # Store result as a list in a list
     
+
     return tally_result
 
 def eval(results: list, round_number: int):
@@ -104,7 +105,6 @@ def eval(results: list, round_number: int):
     for result in results:
         candidate_percentage = round(result[1] / total_votes, 4) * 100 # Returns candidates percentage to two decimal places
         outcome_percentages.append((result[0], candidate_percentage)) # Stores result in outcome_percentages
-
         if result[1] >= num_to_win:
             exists_winner = True
         else:
@@ -113,7 +113,7 @@ def eval(results: list, round_number: int):
     print(outcome_percentages)
     
     if exists_winner is True:
-        winner()
+        return winner()
     else:
         print(f"No person has majority.")
         return new_round(round_number)
@@ -150,6 +150,9 @@ def new_round(round_number: int):
         row = list(map(lambda cell : cell if cell!=lowest_nonprimary_vote else 1, row)) # Replaces next lowest value with 1
         if DEBUG is True:
             print("DEBUG: ", row)
+        
+        # Update SQL table
+        update_sql(rowid, row)
 
     round_number += 1
 
@@ -176,8 +179,27 @@ def extract_row(rowid: int):
         row = [int(vote) for vote in row] # Ensure all values are Python ints
     return row
 
+def update_sql(rowid: int, values: list):
+    """
+    Update a row in the SQL database.
+    :param rowid: The ROWID (row ID) of the column you wish to update
+    :param values: The values of the data with which you wish to update this row
+    """
+    cur.execute(f"PRAGMA table_info(eballot)")
+    index = 0 # Index of the list that we will indicate which item from the list will be used to update data
+    columns = cur.fetchall()
+    for column in columns:
+        column_name = column[1]
+        query = f"""
+            UPDATE eballot
+            SET "{column_name}" = '{values[index]}'
+            WHERE ROWID = {rowid};
+        """
+        cur.execute(query)
+        index += 1
+
 def winner():
-    exit()
+    return None
 
 if __name__ == "__main__":
     csv_to_db()
