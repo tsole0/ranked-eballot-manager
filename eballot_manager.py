@@ -7,6 +7,8 @@ from math import ceil
 connection = sqlite3.connect("eballot-data.db")
 cur = connection.cursor()
 
+DEBUG = True #Toggle DEBUG mode
+
 def csv_to_db():
     """
     Finds csv file in folder and outputs .db file with same data
@@ -63,7 +65,7 @@ def ranked_choice():
     
     round_number = 1 # Starts as round 1 of elections
     tally_result = tally(1) # Count first choices
-    eval(tally_result, round_number) # Start the election adjudication loop
+    return eval(tally_result, round_number) # Start the election adjudication loop
 
 def tally(place: int):
     """
@@ -86,21 +88,36 @@ def tally(place: int):
 
 def eval(results: list, round_number: int):
     """
-    Determine if winner, and who.
+    Determine if exists winner, and who. Prints process for easy auditing.
     :param results: The list containing amount of votes to evaluate. Must only include lists of form [candidate name, number of votes]
     :param round_number: The number of the current round of voting.
     """
-    num_to_win = ceil(sum((result[1] for result in results)) / 2) # The number of votes needed to win in this round of voting (simple majority)
-    
+    total_votes = sum(result[1] for result in results)
+    num_to_win = ceil(total_votes / 2) # The number of votes needed to win in this round of voting (simple majority)
+    print(f"Begin round {round_number}.")
+
+    outcome_percentages = [] # Initialize list of candidates and their percentages of first choice votes
+    exists_winner = False # Nobody has yet won the election
+
     # Determine if there is a winner
+
     for result in results:
+        candidate_percentage = round(result[1] / total_votes, 4) * 100 # Returns candidates percentage to two decimal places
+        outcome_percentages.append((result[0], candidate_percentage)) # Stores result in outcome_percentages
+
         if result[1] >= num_to_win:
-            winner()
-            break
+            exists_winner = True
         else:
-            new_round(round_number)
-            break
-        
+            pass
+    
+    print(outcome_percentages)
+    
+    if exists_winner is True:
+        winner()
+    else:
+        print(f"No person has majority.")
+        return new_round(round_number)
+
 def new_round(round_number: int):
     """
     'Eliminate' lowest-scoring candidate, then kick back to new evaluation round--
@@ -112,6 +129,8 @@ def new_round(round_number: int):
     for result in tally_results:
         if result[1] < lowest[1] or lowest[1] == -1:
             lowest = result
+    
+    print(f"{lowest[0]} has the least amount of votes and is eliminated.\n")
 
     query = f"""
     SELECT ROWID
@@ -122,17 +141,26 @@ def new_round(round_number: int):
     rowids = [rowid[0] for rowid in cur.fetchall()] # Gets the row IDs of all 1's in the lowest-scoring candidate's column
 
     for rowid in rowids:
+        lowest_nonprimary_vote = 99999 # Initialize as an arbitrarily high number that ensures any (resonable) # of candidates can be considered
         row = extract_row(rowid)
-
+        for vote in row:
+            if vote > 1 and vote < lowest_nonprimary_vote:
+                lowest_nonprimary_vote = vote
+        row = list(map(lambda cell : cell if cell!=1 else 0, row)) # Replaces 1 with 0 in row
+        row = list(map(lambda cell : cell if cell!=lowest_nonprimary_vote else 1, row)) # Replaces next lowest value with 1
+        if DEBUG is True:
+            print("DEBUG: ", row)
 
     round_number += 1
+
+    return eval(tally(1), round_number)
 
 def extract_row(rowid: int):
     """
     Extract a row from the SQL database.
     :param rowid: The ROWID (row ID) of the column you wish to extract
     """
-    row = []
+    row = [] # Initialize row to be returned later
     cur.execute(f"PRAGMA table_info(eballot)")
     columns = cur.fetchall()
     for column in columns:
@@ -143,20 +171,13 @@ def extract_row(rowid: int):
             WHERE ROWID = {rowid};
         """
         cur.execute(query)
-        row.append(cur.fetchone()[0])
-    print(row)
-
-
-
-
-
-
+        single_vote = int(cur.fetchone()[0])
+        row.append(single_vote)
+        row = [int(vote) for vote in row] # Ensure all values are Python ints
+    return row
 
 def winner():
-    pass
-
-
-
+    exit()
 
 if __name__ == "__main__":
     csv_to_db()
