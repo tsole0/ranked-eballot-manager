@@ -1,6 +1,7 @@
 import sqlite3
 import csv
 import glob
+from sys import maxsize
 from math import ceil
 
 # Create database for data manipulation
@@ -64,6 +65,7 @@ def ranked_choice():
         cur.execute(update_query)
     
     round_number = 1 # Starts as round 1 of elections
+    tiebreaking_statistic() # Determine tiebreaking using Borda count
     tally_result = tally(1) # Count first choices
     return eval(tally_result, round_number) # Start the election adjudication loop
 
@@ -99,6 +101,7 @@ def eval(results: list, round_number: int):
 
     outcome_percentages = [] # Initialize list of candidates and their percentages of first choice votes
     exists_winner = False # Nobody has yet won the election
+    winner_name = "" # Initialze variable for winner of the election
 
     # Determine if there is a winner
 
@@ -107,13 +110,14 @@ def eval(results: list, round_number: int):
         outcome_percentages.append((result[0], candidate_percentage)) # Stores result in outcome_percentages
         if result[1] >= num_to_win:
             exists_winner = True
+            winner_name = result[0]
         else:
             pass
     
     print(outcome_percentages)
     
     if exists_winner is True:
-        return winner()
+        return winner(winner_name)
     else:
         print(f"No person has majority.")
         return new_round(round_number)
@@ -124,13 +128,18 @@ def new_round(round_number: int):
     :param round_number: The number of the current round of voting.
     """
     tally_results = tally(1)
-    initial_value = -1
-    lowest = [str, initial_value]
-    for result in tally_results:
-        if result[1] < lowest[1] or lowest[1] == -1:
-            lowest = result
+
+    # Use Borda count to ensure equitable adjudication
+    if borda(tally_results) != None:
+        pass
+    else:
+        initial_value = -1
+        lowest = [str, initial_value]
+        for result in tally_results:
+            if result[1] < lowest[1] or lowest[1] == -1:
+                lowest = result
     
-    print(f"{lowest[0]} has the least amount of votes and is eliminated.\n")
+    print(f"{lowest[0]} has the least amount of top-preference votes and is eliminated.\n")
 
     query = f"""
     SELECT ROWID
@@ -157,6 +166,51 @@ def new_round(round_number: int):
     round_number += 1
 
     return eval(tally(1), round_number)
+
+def borda(tally_results: list):
+    """
+    Determines if a Borda Count is necessary to break a tie in an elimination phase and executes one if so.
+    Returns None if not necessary, otherwise returns name of candidate to be eliminated
+    :param tally_results: List provided by tally() method
+    """
+
+    #Determine if there is a tie in lowest amount of votes, if not return None
+    current_tally = tally(1)
+    amount_votes = []
+    lowest_candidates = []
+    for candidate in current_tally:
+        amount_votes.append(candidate[1])
+    lowest_vote = min(amount_votes)
+    for candidate in current_tally:
+        if candidate[1] == lowest_vote:
+            lowest_candidates.append(candidate)
+    if len(lowest_candidates) == 1:
+        return None
+    
+    #Perform Borda count and determine which of the tied candidates has the least overall support
+    tied_candidates = [candidate[0] for candidate in lowest_candidates]
+    print(tied_candidates)
+    print(tiebreaking_points)
+    # Determine which candidate wins tiebreaker
+
+    points_dict = {name: maxsize for name in tied_candidates}
+    print("!!!", points_dict)
+    for name in tied_candidates:
+        if name in tiebreaking_points:
+            points_dict[name] = tiebreaking_points[name]
+    
+    print(points_dict, "!!!!")
+    
+    min_points = maxsize
+    eliminated_candidate = None
+    for name in tied_candidates:
+        if points_dict[name] < min_points:
+            min_points = points_dict[name]
+            eliminated_candidate = name
+
+    print("!!!!", eliminated_candidate)
+
+
 
 def extract_row(rowid: int):
     """
@@ -198,8 +252,43 @@ def update_sql(rowid: int, values: list):
         cur.execute(query)
         index += 1
 
-def winner():
-    return None
+def winner(winner_name: str):
+    """
+    Announce a winner of the election.
+    :param winner_name: The name of the winner.
+    """
+    print(winner_name, "has won the election!")
+
+def tiebreaking_statistic():
+    # Query column names and number of columns
+    cur.execute(f"PRAGMA table_info(eballot)")
+    columns = cur.fetchall()
+    num_columns = len(columns)
+
+    # Query number of rows
+    query = f"""
+        SELECT COUNT(*) FROM eballot;
+        """
+    cur.execute(query)
+    num_rows = cur.fetchall()[0][0]
+
+    global tiebreaking_points # Make tiebreaking points accessable in any function without recalling tiebreaking_statistic()
+    tiebreaking_points = {}
+    for column in columns:
+        borda_points = int()
+        column_name = column[1]
+        for row in range(num_rows):
+            rowid = row + 1
+            query = f"""
+                SELECT "{column_name}"
+                FROM eballot
+                WHERE ROWID = {rowid};
+            """
+            cur.execute(query)
+            num = cur.fetchone()[0]
+            borda_points += (num_columns - (int(num) - 1))
+        tiebreaking_points[column_name] = borda_points
+
 
 if __name__ == "__main__":
     csv_to_db()
