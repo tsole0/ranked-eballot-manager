@@ -16,4 +16,4 @@ This Borda count is determined before any of the other election processes begin,
 
 ## Limits of system design
 
-At a (very large) number of rounds, Python will return a stack size error and no more results will be tabulated. However, due to limitations in the implementation of the program, a maximum number of election rounds is set to a smaller 99,999 rounds.
+At a (very large) number of rounds, Python will return a stack size error and no more results will be tabulated. However, due to limitations in the implementation of the program, it is likely (although untested) that using a large amount of candidates >800 could lead to stack overflows in the code, causing errors.
