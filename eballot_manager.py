@@ -8,7 +8,7 @@ from math import ceil
 connection = sqlite3.connect("eballot-data.db")
 cur = connection.cursor()
 
-DEBUG = True #Toggle DEBUG mode
+DEBUG = False #Toggle DEBUG mode
 
 def csv_to_db():
     """
@@ -130,8 +130,13 @@ def new_round(round_number: int):
     tally_results = tally(1)
 
     # Use Borda count to ensure equitable adjudication
-    if borda(tally_results) != None:
-        pass
+    bordacount = borda(tally_results)
+    if bordacount != None:
+        print("There is a tie for lowest placing candidate. Borda count is used.")
+        lowest = [str, int]
+        for name in tally_results:
+            if name[0] == bordacount:
+                lowest = name
     else:
         initial_value = -1
         lowest = [str, initial_value]
@@ -189,18 +194,14 @@ def borda(tally_results: list):
     
     #Perform Borda count and determine which of the tied candidates has the least overall support
     tied_candidates = [candidate[0] for candidate in lowest_candidates]
-    print(tied_candidates)
-    print(tiebreaking_points)
-    # Determine which candidate wins tiebreaker
 
+    # Determine which candidate wins tiebreaker
     points_dict = {name: maxsize for name in tied_candidates}
-    print("!!!", points_dict)
     for name in tied_candidates:
         if name in tiebreaking_points:
             points_dict[name] = tiebreaking_points[name]
     
-    print(points_dict, "!!!!")
-    
+    # Determine which of the tied candidates has least amount of overall support
     min_points = maxsize
     eliminated_candidate = None
     for name in tied_candidates:
@@ -208,7 +209,7 @@ def borda(tally_results: list):
             min_points = points_dict[name]
             eliminated_candidate = name
 
-    print("!!!!", eliminated_candidate)
+    return eliminated_candidate
 
 
 
