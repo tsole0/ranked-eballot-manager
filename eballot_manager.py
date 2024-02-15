@@ -41,9 +41,17 @@ def csv_to_db():
 
 def ranked_choice():
     find_replace_dict = {
+        "": "0",
         "First": "1",
         "Second": "2",
-        "Third": "3"
+        "Third": "3",
+        "Fourth": "4",
+        "Fifth": "5",
+        "Sixth": "6",
+        "Seventh": "7",
+        "Eighth": "8",
+        "Ninth": "9",
+        "Tenth": "10"
     }
     # Iterate through each table and column, and perform the find-and-replace
     cur.execute(f"PRAGMA table_info(eballot)")
@@ -53,6 +61,8 @@ def ranked_choice():
 
         for find, replace in find_replace_dict.items():
             update_query = f"UPDATE eballot SET \"{column_name}\" = REPLACE(\"{column_name}\", '{find}', '{replace}');"
+            cur.execute(update_query)
+            update_query = f"UPDATE eballot SET \"{column_name}\" = 0 WHERE LENGTH(\"{column_name}\") = 0;"
             cur.execute(update_query)
 
     # Remove all but the first character, which should just be a numeral at this point
@@ -111,8 +121,6 @@ def eval(results: list, round_number: int):
         if result[1] >= num_to_win:
             exists_winner = True
             winner_name = result[0]
-        else:
-            pass
     
     print(outcome_percentages)
     
@@ -155,7 +163,7 @@ def new_round(round_number: int):
     rowids = [rowid[0] for rowid in cur.fetchall()] # Gets the row IDs of all 1's in the lowest-scoring candidate's column
 
     for rowid in rowids:
-        lowest_nonprimary_vote = 99999 # Initialize as an arbitrarily high number that ensures any (resonable) # of candidates can be considered
+        lowest_nonprimary_vote = maxsize # Initialize as an arbitrarily high number that ensures any (resonable) # of candidates can be considered
         row = extract_row(rowid)
         for vote in row:
             if vote > 1 and vote < lowest_nonprimary_vote:
@@ -167,6 +175,24 @@ def new_round(round_number: int):
         
         # Update SQL table
         update_sql(rowid, row)
+
+    cur.execute(f"PRAGMA table_info(eballot)")
+    columns = cur.fetchall()
+    
+    columns_for_sqlite_query = ""
+    for column in columns:
+        if column[1] != lowest[0]:
+            columns_for_sqlite_query += f"\"{column[1]}\", "
+    columns_for_sqlite_query = columns_for_sqlite_query[:-2]
+
+    query = f"""
+                CREATE TABLE new_table AS
+                SELECT {columns_for_sqlite_query}
+                FROM eballot;
+            """
+    cur.execute(query)
+    cur.execute("DROP TABLE eballot;")
+    cur.execute("ALTER TABLE new_table RENAME TO eballot;")
 
     round_number += 1
 
@@ -210,8 +236,6 @@ def borda(tally_results: list):
             eliminated_candidate = name
 
     return eliminated_candidate
-
-
 
 def extract_row(rowid: int):
     """
