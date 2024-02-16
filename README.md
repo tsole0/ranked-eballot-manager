@@ -16,4 +16,4 @@ This order in which the Borda count takes place is determined before any of the 
 
 ## Limits of system design
 
-At a (very large) number of rounds, Python will return a stack size error and no more results will be tabulated. However, due to limitations in the implementation of the program, it is likely (although untested) that using a large amount of candidates >800 could lead to stack overflows in the code, causing errors.
+At a (very large) number of rounds, Python will return a stack size error and no more results will be tabulated. However, due to limitations in the implementation of the program, it is likely (although untested) that using a large amount of candidates >450 could lead to stack overflows, causing fatal errors.
