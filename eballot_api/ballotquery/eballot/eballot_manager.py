@@ -185,6 +185,7 @@ def new_round(round_number: int):
             columns_for_sqlite_query += f"\"{column[1]}\", "
     columns_for_sqlite_query = columns_for_sqlite_query[:-2]
 
+    # Delete column with eliminated candidate
     query = f"""
                 CREATE TABLE new_table AS
                 SELECT {columns_for_sqlite_query}

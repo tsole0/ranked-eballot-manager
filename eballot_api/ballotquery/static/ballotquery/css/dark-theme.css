@@ -1,0 +1,92 @@
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-weight: bold;
+    background-color: #1a1a1a;
+    color: #ffffff;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #333333;
+    padding: 20px;
+    text-align: center;
+}
+
+header img {
+    width: 100px; /* Adjust size as needed */
+    height: auto;
+}
+
+header h1 {
+    margin-top: 10px;
+    font-size: 24px;
+}
+
+main {
+    padding: 20px;
+}
+
+h2 {
+    color: #aaaaaa; /* Light grey color */
+}
+
+section {
+    margin-bottom: 20px;
+}
+
+#upload-section {
+    border-bottom: 1px solid #666666;
+    padding-bottom: 20px;
+}
+
+#upload-form {
+    margin-bottom: 10px;
+}
+
+input[type="file"] {
+    background-color: #333333;
+    color: #ffffff;
+    border: 1px solid #666666;
+    padding: 10px;
+    border-radius: 5px;
+    width: 200px; /* Adjust size as needed */
+}
+
+input[type="file"]:focus {
+    outline: none;
+}
+
+button {
+    background-color: #dddddd; /* Light grey color */
+    color: #333333; /* Dark grey text color */
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #cccccc; /* Slightly darker grey color on hover */
+}
+
+#results-container {
+    background-color: #333333;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+footer {
+    background-color: #333333;
+    padding: 10px;
+    text-align: center;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+footer p {
+    margin: 0;
+    font-size: 14px;
+}

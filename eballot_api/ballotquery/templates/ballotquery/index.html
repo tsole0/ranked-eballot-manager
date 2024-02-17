@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCR-SGA Ranked-Choice Voting</title>
+    <!-- Add CSS stylesheet link here -->
+    <link rel="stylesheet" href="{% static 'ballotquery/css/dark-theme.css' %}">
+</head>
+
+<body>
+    <header>
+        <!-- Add MCR-SGA logo here -->
+        <img src="{% static 'ballotquery/images/mcr-logo.png' %}" alt="MCR-SGA Logo">
+        <h1>MCR-SGA Ranked-Choice Voting</h1>
+    </header>
+
+    <main>
+        <section id="upload-section">
+            <h2>Upload CSV File</h2>
+            <form id="upload-form" enctype="multipart/form-data">
+                <input type="file" id="csv-file" accept=".csv" required>
+                <button type="submit">Upload</button>
+            </form>
+        </section>
+
+        <section id="results-section">
+            <h2>Results</h2>
+            <div id="results-container">
+                <!-- Results will be displayed here -->
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Made with 🤍 by Brayden Miller</p>
+    </footer>
+
+    <!-- Add your JavaScript file link here -->
+    <!-- <script src="script.js"></script> -->
+</body>
+
+</html>
