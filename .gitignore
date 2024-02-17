@@ -1,6 +1,7 @@
 # NEEDED TO KEEP ELECTION RESULTS PRIVATE
 *.csv
 *.db
+*.db-journal
 
 # OTHER RANDOM STUFF
 *.pyc
