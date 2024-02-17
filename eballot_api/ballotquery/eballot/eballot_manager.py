@@ -10,6 +10,14 @@ cur = connection.cursor()
 
 DEBUG = False #Toggle DEBUG mode
 
+def process_csv(csv_file):
+    # Process the CSV file and return results
+    results = {'results': 'CSV file processed successfully'}
+
+    # add more here...
+
+    return results
+
 def csv_to_db():
     """
     Finds csv file in folder and outputs .db file with same data

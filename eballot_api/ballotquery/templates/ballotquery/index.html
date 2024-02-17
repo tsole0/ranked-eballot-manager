@@ -7,7 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MCR-SGA Ranked-Choice Voting</title>
     
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <link rel="stylesheet" href="{% static 'ballotquery/css/dark-theme.css' %}">
+    <script src="{% static 'ballotquery/js/form-ajax.js' %}"></script>
 </head>
 
 <body>
@@ -26,7 +28,8 @@
 
         <section id="upload-section">
             <h2>Upload CSV File</h2>
-            <form id="upload-form" enctype="multipart/form-data">
+            <form id="upload-form" enctype="multipart/form-data" method="post">
+                {% csrf_token %}
                 <input type="file" id="csv-file" accept=".csv" required>
                 <button type="submit">Upload</button>
             </form>
