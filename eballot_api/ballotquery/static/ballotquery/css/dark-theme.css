@@ -5,12 +5,17 @@ body {
     color: #ffffff;
     margin: 0;
     padding: 0;
+    padding-top: 200px;
 }
 
 header {
     background-color: #333333;
     padding: 20px;
     text-align: center;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 999; /* Ensure header is above other content */
 }
 
 header img {
