@@ -19,6 +19,6 @@ def upload_csv(request):
         logger.info('Response: %s', results)
 
         # Assuming eballot_manager returns results as a dictionary
-        return JsonResponse({'results': results})
+        return JsonResponse(results)
 
     return JsonResponse({'error': 'No file provided'}, status=400)

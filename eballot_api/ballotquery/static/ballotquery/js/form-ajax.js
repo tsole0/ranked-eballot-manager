@@ -40,11 +40,12 @@ $(document).ready(function() {
             processData: false,
             contentType: false,
             success: function(response) {
+                console.log(response);
                 $('#results-container').html(response.results); // Update results container with response
             },
             error: function(xhr, status, error) {
                 console.error(error);
             }
-        });
+        });        
     });
 });
