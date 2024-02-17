@@ -75,6 +75,8 @@ button:hover {
     background-color: #333333;
     padding: 10px;
     border-radius: 5px;
+    white-space: pre-wrap; /* or pre-line */
+    font-family: "Courier New", Courier, monospace;
 }
 
 footer {

@@ -16,8 +16,6 @@ def upload_csv(request):
         # Process CSV file using eballot_manager
         results = eballot_manager.process_csv(csv_file)
 
-        logger.info('Response: %s', results)
-
         # Assuming eballot_manager returns results as a dictionary
         return JsonResponse(results)
 

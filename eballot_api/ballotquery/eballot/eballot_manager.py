@@ -1,22 +1,71 @@
 import sqlite3
 import csv
 import glob
-from sys import maxsize
+import sys
+from io import StringIO
 from math import ceil
 
 # Create database for data manipulation
-connection = sqlite3.connect("eballot-data.db")
+connection = sqlite3.connect("eballot-data.db", check_same_thread=False)
 cur = connection.cursor()
 
 DEBUG = False #Toggle DEBUG mode
 
+class ConsoleCapture:
+    def __init__(self):
+        self.original_stdout = sys.stdout
+        self.captured_output = StringIO()
+
+    def start(self):
+        sys.stdout = self.captured_output
+
+    def stop(self):
+        sys.stdout = self.original_stdout
+
+    def get_output(self):
+        return self.captured_output.getvalue()
+
 def process_csv(csv_file):
     # Process the CSV file and return results
-    results = {'results': 'CSV file processed successfully'}
 
-    # add more here...
+    
+    capture = ConsoleCapture()
+    capture.start()
+
+    web_csv_to_db(csv_file)
+    ranked_choice()
+
+    capture.stop()
+
+    results = {'results': capture.get_output()}
 
     return results
+
+def web_csv_to_db(web_csv):
+    """
+    Outputs .db file with same data as input
+    :param web_csv: A `.csv` file sent from client
+    """
+    web_csv.seek(0)
+    read_csv = csv.reader((line.decode('utf-8') for line in web_csv), delimiter=",")
+    header = next(read_csv)
+    cur.execute(f"DROP TABLE IF EXISTS eballot")  # clear any existing data
+    request = f"""
+        CREATE TABLE IF NOT EXISTS eballot (
+            {
+                ', '.join(['"'+col+'" TEXT' for col in header])
+            }
+        )
+    """
+    cur.execute(request)
+
+    # Insert table data into .db
+    for row in read_csv:
+        placeholders = ', '.join(['?' for _ in row])
+        insert_query = f"INSERT INTO eballot VALUES ({placeholders})"
+        cur.execute(insert_query, row)
+
+
 
 def csv_to_db():
     """
@@ -171,7 +220,7 @@ def new_round(round_number: int):
     rowids = [rowid[0] for rowid in cur.fetchall()] # Gets the row IDs of all 1's in the lowest-scoring candidate's column
 
     for rowid in rowids:
-        lowest_nonprimary_vote = maxsize # Initialize as an arbitrarily high number that ensures any (resonable) # of candidates can be considered
+        lowest_nonprimary_vote = sys.maxsize # Initialize as an arbitrarily high number that ensures any (resonable) # of candidates can be considered
         row = extract_row(rowid)
         for vote in row:
             if vote > 1 and vote < lowest_nonprimary_vote:
@@ -231,13 +280,13 @@ def borda(tally_results: list):
     tied_candidates = [candidate[0] for candidate in lowest_candidates]
 
     # Determine which candidate wins tiebreaker
-    points_dict = {name: maxsize for name in tied_candidates}
+    points_dict = {name: sys.maxsize for name in tied_candidates}
     for name in tied_candidates:
         if name in tiebreaking_points:
             points_dict[name] = tiebreaking_points[name]
     
     # Determine which of the tied candidates has least amount of overall support
-    min_points = maxsize
+    min_points = sys.maxsize
     eliminated_candidate = None
     for name in tied_candidates:
         if points_dict[name] < min_points:
