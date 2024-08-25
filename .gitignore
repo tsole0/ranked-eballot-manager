@@ -2,6 +2,7 @@
 *.csv
 *.db
 *.db-journal
+*.sqlite3
 
 # OTHER RANDOM STUFF
 *.pyc

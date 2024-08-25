@@ -1,13 +1,59 @@
 import sqlite3
 import csv
 import glob
+import os
 import sys
+from pathlib import Path
 from io import StringIO
 from math import ceil
 
-# Create database for data manipulation
-connection = sqlite3.connect("eballot-data.db", check_same_thread=False)
-cur = connection.cursor()
+from ballotquery.eballot.locking import db_lock
+
+def create_db():
+    """
+    Create database for data manipulation
+    """
+    with db_lock:
+        dir_path = Path(os.path.dirname(os.path.realpath(__file__)))
+        filename = Path('eballot-data.db')
+        db_path = f"{dir_path / 'sqlite' / filename}"
+
+        if not os.path.exists(dir_path / 'sqlite'):
+            # make sure there is an sqlite folder to write to
+            os.makedirs(dir_path / 'sqlite')
+        
+        # Check if the file already exists and increment the numeral if necessary
+        counter = 1
+        while os.path.isfile(db_path):
+            # Split the base filename and extension
+            name, ext = os.path.splitext(filename)
+            
+            # Create a new filename with the counter
+            filename = f"{name.strip('1234567890-')}-{counter}{ext}"
+            db_path = f"{dir_path / 'sqlite' / filename}"
+            counter += 1
+        
+        #Once a new name has been found, create database:
+        global connection
+        print(db_path)
+        connection = sqlite3.connect(db_path, check_same_thread=False)
+
+    global cur
+    cur = connection.cursor()
+    return db_path
+
+def delete_db(db_path):
+    """
+    Delete database\n
+    :param db_path: path to database to be deleted
+    """
+    try:
+        os.remove(db_path)
+        journal = f"{db_path}-journal"
+        os.remove(journal)
+        return True
+    except (TypeError, OSError):
+        return False
 
 DEBUG = False #Toggle DEBUG mode
 
@@ -27,7 +73,7 @@ class ConsoleCapture:
 
 def process_csv(csv_file):
     # Process the CSV file and return results
-
+    db_path = create_db()
     
     capture = ConsoleCapture()
     capture.start()
@@ -38,6 +84,11 @@ def process_csv(csv_file):
     capture.stop()
 
     results = {'results': capture.get_output()}
+
+    delete_sucessful = delete_db(db_path)
+
+    if not delete_sucessful:
+        results["results"].append("[INFO: Database deletion failed]")
 
     return results
 
@@ -64,8 +115,6 @@ def web_csv_to_db(web_csv):
         placeholders = ', '.join(['?' for _ in row])
         insert_query = f"INSERT INTO eballot VALUES ({placeholders})"
         cur.execute(insert_query, row)
-
-
 
 def csv_to_db():
     """
@@ -374,8 +423,11 @@ def tiebreaking_statistic():
 
 
 if __name__ == "__main__":
+    db_path = create_db()
     csv_to_db()
     ranked_choice()
+    delete_sucessful = delete_db(db_path)
+    print("All operations sucessful: ", delete_sucessful)
     # Commit changes and close the database connection
     connection.commit()
     connection.close()
