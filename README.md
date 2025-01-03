@@ -1,5 +1,5 @@
 # ranked-eballot-manager
-
+**WORK IN PROGRESS**
 ## Functionality
 
 Webapp for processing `.csv` files containing ranked choice election data and adjudicating elections based on this data.
