@@ -228,7 +228,9 @@ def eval(results: list, round_number: int):
             exists_winner = True
             winner_name = result[0]
     
-    print(outcome_percentages)
+    # Format and print outcome percentages:
+    for candidate_tuple in outcome_percentages:
+        print(f'{candidate_tuple[0]} | {str(candidate_tuple[1])[:5]}%')
     
     if exists_winner is True:
         return winner(winner_name)
