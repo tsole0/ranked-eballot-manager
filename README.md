@@ -1,5 +1,8 @@
 # ranked-eballot-manager Version 1.0
 
+## How to use
+Download the latest release as an executable for your platform in the 'Releases' platform. Note that binaries are not signed and only MacOS is tested.
+
 ## Functionality
 
 Excecutable-based webapp for processing `.csv` files containing ranked choice election data and adjudicating elections based on this data.
