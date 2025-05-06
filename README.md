@@ -1,8 +1,8 @@
-# ranked-eballot-manager
-**WORK IN PROGRESS**
+# ranked-eballot-manager Version 1.0
+
 ## Functionality
 
-Webapp for processing `.csv` files containing ranked choice election data and adjudicating elections based on this data.
+Excecutable-based webapp for processing `.csv` files containing ranked choice election data and adjudicating elections based on this data.
 
 ## Election Technical Specifications
 
@@ -25,6 +25,7 @@ At a (very large) number of rounds, Python will return a stack size error and no
 ## Development Roadmap
 
 - [x] Implement Cross-Site Request Forgery (CSRF) verification
+- [x] Develop executable-based runtime for first release
 - [ ] Sanitize inputs to protect against SQL insertion attacks
   - [ ] Look into parameterized SQL queries
 - [ ] Allow user to download output as `.txt` file
