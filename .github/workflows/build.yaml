@@ -6,35 +6,134 @@ on:
       - main
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-
+  build-linux:
+    runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.11
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
 
-    - name: Install PyInstaller
-      run: pip install pyinstaller
+      - name: Build Executable
+        run: pyinstaller app.spec
 
-    - name: Build Executable
-      run: pyinstaller app.spec
+      - name: Upload Executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: executable-ubuntu
+          path: dist/
 
-    - name: Upload Executable
-      uses: actions/upload-artifact@v4
-      with:
-        name: executable-${{ matrix.os }}
-        path: dist/
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build Executable
+        run: pyinstaller app.spec
+
+      - name: Upload Executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: executable-windows
+          path: dist/
+
+  build-macos-arm64:
+    runs-on: macos-14-arm64
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build Executable (arm64)
+        run: pyinstaller app.spec
+
+      - name: Upload Executable (arm64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: executable-macos-arm64
+          path: dist/app  # Replace 'app' with your built binary name
+
+  build-macos-x86_64:
+    runs-on: macos-13
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build Executable (x86_64)
+        run: pyinstaller app.spec
+
+      - name: Upload Executable (x86_64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: executable-macos-x86_64
+          path: dist/app  # Replace 'app' with your built binary name
+
+  merge-macos-universal:
+    runs-on: macos-14-arm64
+    needs: [build-macos-arm64, build-macos-x86_64]
+    steps:
+      - name: Download arm64 binary
+        uses: actions/download-artifact@v4
+        with:
+          name: executable-macos-arm64
+          path: bin/arm64
+
+      - name: Download x86_64 binary
+        uses: actions/download-artifact@v4
+        with:
+          name: executable-macos-x86_64
+          path: bin/x86_64
+
+      - name: Merge with lipo
+        run: |
+          mkdir -p dist
+          lipo -create -output dist/app-universal bin/arm64/app bin/x86_64/app
+          file dist/app-universal
+
+      - name: Upload Universal macOS Executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: executable-macos-universal
+          path: dist/app-universal
