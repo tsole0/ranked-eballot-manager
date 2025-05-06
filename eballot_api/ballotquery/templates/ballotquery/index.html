@@ -10,6 +10,18 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <link rel="stylesheet" href="{% static 'ballotquery/css/dark-theme.css' %}">
     <script src="{% static 'ballotquery/js/form-ajax.js' %}"></script>
+
+    <script>
+        function copyResultsToClipboard() {
+            const resultsContent = document.getElementById('results-container').innerText;
+            navigator.clipboard.writeText(resultsContent).then(function() {
+                alert('Results copied to clipboard!');
+            }).catch(function(err) {
+                alert('Error copying text: ', err);
+            });
+        }
+    </script>
+    
 </head>
 
 <body>
@@ -33,6 +45,10 @@
                 <input type="file" id="csv-file" accept=".csv" required>
                 <button type="submit">Upload</button>
             </form>
+        </section>
+
+        <section>
+            <button onclick="copyResultsToClipboard()">Copy Results to Clipboard</button>
         </section>
 
         <section id="results-section">
